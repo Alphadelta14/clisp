@@ -840,9 +840,10 @@ if [ $XCC_GCC = true ] ; then
   fi
   if [ "$cpu" = i386 ] ; then
     # gcc <= 2.3.2 may crash when compiling lisparit with -O2
-    # gcc 2.3.3 may produce incorrect code when compiling spvw(SPVW_PURE) with -O -fomit-frame-pointer
+    # gcc 2.3.3 may produce incorrect code when compiling spvw(SPVW_PURE)
+    # with -O -fomit-frame-pointer
     if [ $CROSS = false ] ; then
-      XCC_GCC_VERSION=`$XCC -v 2>&1 | tail -1 | sed -e 's/.*version //g'`
+      XCC_GCC_VERSION=`$XCC -v 2>&1 | tail -1 | sed -e 's/.*version //g' -e 's/gcc //'`
       case "$XCC_GCC_VERSION" in
         2.7.[0-2] )
           # gcc-2.7.2 has a strength-reduction bug (fixed in gcc-2.7.2.1,
@@ -863,7 +864,7 @@ if [ $XCC_GCC = true ] ; then
     XCFLAGS=$XCFLAGS'-O2 -fno-strength-reduce'
   elif [ "$cpu" = sparc ] ; then
     if [ $CROSS = false ] ; then
-      XCC_GCC_VERSION=`$XCC -v 2>&1 | tail -1 | sed -e 's/.*version //g'`
+      XCC_GCC_VERSION=`$XCC -v 2>&1 | tail -1 | sed -e 's/.*version //g' -e 's/gcc //'`
       case "$XCC_GCC_VERSION" in
         egcs-2.*)
           # egcs-1.0.3 and egcs-1.1.1 produce incorrect code when compiling
@@ -882,6 +883,20 @@ if [ $XCC_GCC = true ] ; then
   else
     XCFLAGS=$XCFLAGS'-O2'
   fi
+  # For platforms that use global register variables...
+  case "$cpu" in
+   m68k | i386 | sparc | sparc64 | hppa | m88k | arm | alpha* | convex | s390*)
+    if [ $CROSS = false ] ; then
+      XCC_GCC_VERSION=`$XCC -v 2>&1 | tail -1 | sed -e 's/.*version //g' -e 's/gcc //'`
+      case "$XCC_GCC_VERSION" in
+       3.1*)
+         # gcc-3.1 produces incorrect code when compiling record (function
+         # C_make_instance).
+         XCFLAGS=$XCFLAGS' -fno-gcse' ;;
+      esac
+    fi
+    ;;
+  esac
   if [ $TSYS = win32gcc ] ; then
     XCFLAGS=$XCFLAGS' -D_WIN32';
   fi
