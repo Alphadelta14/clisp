@@ -1,0 +1,3 @@
+(load "init.lisp")
+(sys::%saveinitmem)
+(exit)
