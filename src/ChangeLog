@@ -1,3 +1,23 @@
+2004-01-02  Sam Steingold  <sds@gnu.org>
+
+	fixed bug #[ 869187 ]: change-class problems
+	* record.d (%CHANGE-CLASS): un-realloc instance & new-class
+
+2004-01-01  Sam Steingold  <sds@gnu.org>
+
+	* modules/berkeley-db/bdb.c: include windows.h only on windows
+	Reported by Aurelio Bignoli <a.bignoli@computer.org>
+
+2004-01-01  Sam Steingold  <sds@gnu.org>
+
+	* install.bat: fixed bug #[ 868881 ]: replaced `|' with `I'
+	and `/' with `\' for the sake of Windows XP
+
+2003-12-31  Sam Steingold  <sds@gnu.org>
+
+	* makemake.in (uninstall-bin) [CYGWIN]: remove clisp.README & clisp.exe
+	(testsuite-all): `clean complete compare', not just `complete'
+
 2003-12-29  Sam Steingold  <sds@gnu.org>
 
 	* version.h: 2.32 is released
