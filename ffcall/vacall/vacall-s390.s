@@ -3,9 +3,9 @@
 gcc2_compiled.:
 .text
 	.align 4
-.globl __vacall
-	.type	 __vacall,@function
-__vacall:
+.globl vacall
+	.type	 vacall,@function
+vacall:
 #	leaf function           0
 #	automatics              120
 #	outgoing args           0
@@ -239,5 +239,5 @@ __vacall:
 	lm	%r6,%r15,240(%r11)
 	br	%r4
 .Lfe1:
-	.size	 __vacall,.Lfe1-__vacall
+	.size	 vacall,.Lfe1-vacall
 	.ident	"GCC: (GNU) 2.95.4 20011006 (Debian prerelease)"

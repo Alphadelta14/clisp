@@ -1,10 +1,10 @@
 #include "asmsparc.h"
 .text
 	.align 4
-	.global C(__vacall)
-	DECLARE_FUNCTION(__vacall)
+	.global C(vacall)
+	DECLARE_FUNCTION(vacall)
 	.proc	020
-C(__vacall:)
+C(vacall:)
 	!$PROLOGUE$ 0
 	save	%sp, -144, %sp
 	!$PROLOGUE$ 1

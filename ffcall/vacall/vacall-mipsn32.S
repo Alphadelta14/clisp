@@ -5,10 +5,10 @@
 	.section	.text
 	.text
 	.align	2
-	.globl	__vacall
-	DECLARE_FUNCTION(__vacall)
-	.ent	__vacall
-__vacall:
+	.globl	vacall
+	DECLARE_FUNCTION(vacall)
+	.ent	vacall
+vacall:
 .LFB1:
 	.frame	$sp,256,$31		
 	.mask	0x90030000,-8
@@ -24,8 +24,8 @@ __vacall:
 	sd	$16,160($sp)
 .LCFI4:
 	.set	noat
-	lui	$1,%hi(%neg(%gp_rel(__vacall)))
-	addiu	$1,$1,%lo(%neg(%gp_rel(__vacall)))
+	lui	$1,%hi(%neg(%gp_rel(vacall)))
+	addiu	$1,$1,%lo(%neg(%gp_rel(vacall)))
 	daddu	$gp,$1,$25
 	.set	at
 	lw	$25,vacall_function
@@ -868,4 +868,4 @@ __vacall:
 	.set	reorder
 
 .LFE1:
-	.end	__vacall
+	.end	vacall
