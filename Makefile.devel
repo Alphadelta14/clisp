@@ -1,0 +1,364 @@
+# -*- makefile -*-
+# This is the developer's makefile, not the user's makefile.
+# Do not use it unless you know exactly what you are doing!
+
+
+# Some important programs:
+SHELL = /bin/sh
+MAKE = make
+PERL = perl
+GROFF = nroff -man
+# GROFF = groff -mandoc
+
+# Choose one of the packers:
+
+# Standard Unix packer. Compress afterwards.
+#PACK = tar
+#PACKOPT = -cvf
+#PACKEXT = .tar
+
+# GNU tar together with compress.
+#PACK = tar
+#PACKOPT = cvfhz
+#PACKEXT = .tar.Z
+
+# set this if you are using GNU tar
+EXCLUDE=--exclude CVS --exclude \*.fas --exclude \*.lib --exclude \*.obj   \
+        --exclude \*.exe --exclude \*.mem --exclude \*.o --exclude build   \
+        --exclude .cvsignore --exclude \*~ --exclude .\#\* --exclude html  \
+	--exclude $(AUTOCONF_CACHE) --exclude tmp			   \
+	--exclude TAGS --exclude \*.elc --exclude \*.orig --exclude \*.rej
+
+# GNU tar together with GNU gzip. Good performance.
+#PACK = tar
+#PACKOPT = cvfhz
+#PACKEXT = .tar.gz
+
+# GNU tar together with bzip2. Slow, but excellent compression rates.
+PACK = tar
+PACKOPT = cvfhj
+PACKEXT = .tar.bz2
+
+# Popular Amiga packer. Good performance.
+#PACK = lha
+#PACKOPT = a
+#PACKEXT = .lzh
+
+# Popular DOS packer.
+#PACK = zip
+#PACKOPT = -r
+#PACKEXT = .zip
+
+# Popular Atari packer.
+#PACK = zoo
+#PACKOPT = -add
+#PACKEXT = .zoo
+
+# The distribution's top directory is called TOPDIR here.
+# Use clisp-YYYY-MM-DD where DD.MM.YYYY is the date.
+TOPDIR = clisp
+T = $(TOPDIR)
+
+SOURCES1 = $T/ANNOUNCE $T/COPYRIGHT $T/GNU-GPL $T/INSTALL $T/SUMMARY $T/clisp.spec $T/clisp.lsm $T/configure
+SOURCES2 = $T/src
+SOURCES4 = $T/ffcall $T/libcharset $T/utils
+SOURCES5 = $T/unix $T/os2 $T/win32msvc $T/win32bc $T/amiga $T/acorn $T/nextapp
+SOURCES6 = $T/modules
+# $T/benchmarks are for developers only
+SOURCES7 = $T/tests $T/emacs $T/doc $T/Makefile.devel
+
+SOURCES = $(SOURCES1) $(SOURCES2) $(SOURCES4) $(SOURCES5) $(SOURCES6) $(SOURCES7)
+
+DOSDIR = /c:/clisp/src
+EMXDIR = /c:/emx
+RSXDIR = /c:/rsx
+TEMPDIR = /tmp/clispdos
+
+
+all : makefiles configures potfiles src/FILES src/VERSION src/uninames.h \
+	src/asmi386.h src/ari80386.msvc.c src/sp80386.msvc.c		 \
+	ffcall/avcall/avcall.h.msvc ffcall/vacall/config.h.msvc		 \
+	ffcall/vacall/vacall.h.msvc ffcall/trampoline/config.h.msvc	 \
+	ffcall/callback/vacall_r/config.h.msvc				 \
+	ffcall/callback/vacall_r/vacall_r.h.msvc			 \
+	ffcall/callback/trampoline_r/config.h.msvc			 \
+	acorn/pathname.txt htmldoc
+
+ffcall-i386 : ffcall/avcall/avcall-i386-msvc.c		\
+	ffcall/vacall/vacall-i386-msvc.c		\
+	ffcall/callback/vacall_r/vacall-i386-msvc.c
+
+htmldoc:
+	cd doc && make impnotes.html && make html && cd ..;
+
+makefiles : os2/makefile acorn/makefile.cc acorn/makefile.gcc		   \
+	win32bc/makefile win32msvc/makefile.msvc4 win32msvc/makefile.msvc7 \
+	win32msvc/makefile.msvc5 win32msvc/makefile.msvc5d
+
+os2/makefile : makemake
+	./makemake os2 gcc > os2/makefile
+
+win32msvc/makefile.msvc4 : makemake
+	./makemake --with-dynamic-ffi \
+		win32msvc msvc4 > win32msvc/makefile.msvc4
+
+win32msvc/makefile.msvc5 : makemake
+	./makemake --with-dynamic-ffi \
+		win32msvc msvc5 > win32msvc/makefile.msvc5
+
+win32msvc/makefile.msvc5d : makemake
+	./makemake --with-dynamic-ffi \
+		win32msvc msvc5 debug > win32msvc/makefile.msvc5d
+
+win32msvc/makefile.msvc7 : makemake
+	./makemake --with-dynamic-ffi \
+		win32msvc msvc7 > win32msvc/makefile.msvc7
+
+win32bc/makefile : makemake
+	./makemake win32bc bcc32i > win32bc/makefile
+
+acorn/makefile.cc : makemake src/VERSION
+	./makemake acorn cc | $(PERL) acorn/swap-ext.pl > acorn/makefile.cc
+
+acorn/makefile.gcc : makemake src/VERSION
+	./makemake acorn gcc | $(PERL) acorn/swap-ext.pl > acorn/makefile.gcc
+
+makemake : src/makemake.in
+	(echo "#!/bin/sh" ; cat src/makemake.in) > makemake
+	chmod a+x makemake
+
+CURDIR=$(shell pwd)
+
+CONFIGURES = src/configure						 \
+	modules/wildcard/configure modules/regexp/configure 		 \
+	modules/clx/new-clx/configure modules/postgresql/configure	 \
+	modules/dirkey/configure modules/syscalls/configure 		 \
+	modules/oracle/configure modules/fastcgi/configure		 \
+	ffcall/configure ffcall/avcall/configure ffcall/vacall/configure \
+	ffcall/trampoline/configure ffcall/callback/configure		 \
+	ffcall/callback/vacall_r/configure				 \
+	ffcall/callback/trampoline_r/configure				 \
+	utils/hln/configure						 \
+	libcharset/configure
+CONFIG_H_IN = modules/wildcard/config.h.in modules/regexp/config.h.in	\
+	modules/dirkey/config.h.in modules/syscalls/config.h.in		\
+	modules/clx/new-clx/config.h.in modules/postgresql/config.h.in  \
+	src/unixconf.h.in
+
+configures : ffcall/autoconf/aclocal.m4 $(CONFIGURES) $(CONFIG_H_IN)
+
+src/autoconf/aclocal.m4 : $(wildcard src/m4/*.m4)
+	cd src ; aclocal --acdir=m4 --output=autoconf/aclocal.m4
+
+AUTOCONF_FILES = src/autoconf/aclocal.m4
+AUTOCONF = autoconf
+AUTOCONF_CACHE = autom4te.cache
+AUTOHEADER = autoheader
+
+%/configure : %/configure.in $(AUTOCONF_FILES)
+	cd $*; $(AUTOCONF) --include $(CURDIR)/src/autoconf
+
+%/config.h.in : %/configure.in $(AUTOCONF_FILES)
+	cd $*; $(AUTOHEADER) --include $(CURDIR)/src/autoconf
+
+src/unixconf.h.in : src/configure.in $(AUTOCONF_FILES)
+	cd src ; $(AUTOHEADER) --include autoconf
+
+ffcall/autoconf/aclocal.m4 : src/autoconf/aclocal.m4
+	cd ffcall ; $(MAKE) -f Makefile.devel autoconf/aclocal.m4
+
+ffcall/configure : ffcall/configure.in ffcall/autoconf/aclocal.m4 $(AUTOCONF_FILES)
+	cd ffcall ; $(MAKE) -f Makefile.devel configure
+
+ffcall/avcall/configure : ffcall/avcall/configure.in ffcall/autoconf/aclocal.m4 $(AUTOCONF_FILES)
+	cd ffcall ; $(MAKE) -f Makefile.devel avcall/configure
+
+ffcall/vacall/configure : ffcall/vacall/configure.in ffcall/autoconf/aclocal.m4 $(AUTOCONF_FILES)
+	cd ffcall ; $(MAKE) -f Makefile.devel vacall/configure
+
+ffcall/trampoline/configure : ffcall/trampoline/configure.in ffcall/autoconf/aclocal.m4 $(AUTOCONF_FILES)
+	cd ffcall ; $(MAKE) -f Makefile.devel trampoline/configure
+
+ffcall/callback/configure : ffcall/callback/configure.in ffcall/autoconf/aclocal.m4 $(AUTOCONF_FILES)
+	cd ffcall ; $(MAKE) -f Makefile.devel callback/configure
+
+ffcall/callback/vacall_r/configure : ffcall/callback/vacall_r/configure.in ffcall/autoconf/aclocal.m4 $(AUTOCONF_FILES)
+	cd ffcall ; $(MAKE) -f Makefile.devel callback/vacall_r/configure
+
+ffcall/callback/trampoline_r/configure : ffcall/callback/trampoline_r/configure.in ffcall/autoconf/aclocal.m4 $(AUTOCONF_FILES)
+	cd ffcall ; $(MAKE) -f Makefile.devel callback/trampoline_r/configure
+
+libcharset/configure : libcharset/configure.in libcharset/autoconf/aclocal.m4 $(AUTOCONF_FILES)
+	cd libcharset ; $(MAKE) -f Makefile.devel configure
+
+
+# syntax check
+check-configures : $(CONFIGURES) $(CONFIG_H_IN)
+	set -e; for f in $(CONFIGURES); do bash -x -n $$f; done
+	rm -rf `find . -name $(AUTOCONF_CACHE)`;
+
+
+potfiles :
+	cd src/po ; $(MAKE) -f Makefile.devel ; $(MAKE) -f Makefile.devel clean
+
+
+view-man :
+	grep -v '^#[ie]' src/_clisp.1 | $(GROFF) -Tascii | less
+
+view-html :
+	grep -v '^#[ie]' src/_clisp.html > /tmp/clisp.html
+	netscape /tmp/clisp.html &
+	lynx /tmp/clisp.html
+
+
+src/FILES : src/FILES.1
+	$(GROFF) -Tascii src/FILES.1 > src/FILES
+
+src/VERSION : src/version.h
+	fgrep _NUMBER src/version.h | sed 's/^.*_NUMBER "\(.*\)"$$/\1/' > src/VERSION
+
+src/uninames.h : utils/unicode/UnicodeDataFull.txt utils/gen-uninames
+	$${CLISP} utils/gen-uninames utils/unicode/UnicodeDataFull.txt src/uninames.h
+
+src/asmi386.h : src/asmi386.hh
+	sed -e 's,//.*$$,,' < src/asmi386.hh > src/asmi386.h
+
+src/ari80386.msvc.c : src/ari80386.d src/asmi386.sh
+	src/asmi386.sh -no-C < src/ari80386.d > src/ari80386.msvc.c
+
+src/sp80386.msvc.c : src/sp80386.d src/asmi386.sh
+	src/asmi386.sh -no-C < src/sp80386.d > src/sp80386.msvc.c
+
+ffcall/avcall/avcall.h.msvc : ffcall/avcall/avcall.h.in
+	cd ffcall ; $(MAKE) -f Makefile.devel avcall/avcall.h.msvc
+
+ffcall/avcall/avcall-i386-msvc.c : ffcall/avcall/avcall-i386-macro.S ffcall/avcall/asmi386.sh
+	cd ffcall ; $(MAKE) -f Makefile.devel avcall/avcall-i386-msvc.c
+
+# ffcall/vacall/config.h.in , ffcall/trampoline/config.h.in,
+# all/callback/vacall_r/vacall_r.h.in, ffcall/callback/trampoline_r/config.h.in
+# are not auto-generated!  [FIXME!!!]
+ffcall/vacall/config.h.in :
+ffcall/vacall/config.h.msvc : ffcall/vacall/config.h.in
+	cd ffcall ; $(MAKE) -f Makefile.devel vacall/config.h.msvc
+
+ffcall/vacall/vacall.h.msvc : ffcall/vacall/vacall.h.in
+	cd ffcall ; $(MAKE) -f Makefile.devel vacall/vacall.h.msvc
+
+ffcall/vacall/vacall-i386-msvc.c : ffcall/vacall/vacall-i386-macro.S ffcall/vacall/asmi386.sh
+	cd ffcall ; $(MAKE) -f Makefile.devel vacall/vacall-i386-msvc.c
+
+ffcall/trampoline/config.h.in :
+ffcall/trampoline/config.h.msvc : ffcall/trampoline/config.h.in
+	cd ffcall ; $(MAKE) -f Makefile.devel trampoline/config.h.msvc
+
+ffcall/callback/vacall_r/config.h.msvc : ffcall/callback/vacall_r/config.h.in
+	cd ffcall ; $(MAKE) -f Makefile.devel callback/vacall_r/config.h.msvc
+
+ffcall/callback/vacall_r/vacall_r.h.in :
+ffcall/callback/vacall_r/vacall_r.h.msvc : ffcall/callback/vacall_r/vacall_r.h.in
+	cd ffcall ; $(MAKE) -f Makefile.devel callback/vacall_r/vacall_r.h.msvc
+
+ffcall/callback/vacall_r/vacall-i386-msvc.c : ffcall/callback/vacall_r/vacall-i386-macro.S ffcall/callback/vacall_r/asmi386.sh
+	cd ffcall ; $(MAKE) -f Makefile.devel callback/vacall_r/vacall-i386-msvc.c
+
+ffcall/callback/trampoline_r/config.h.in :
+ffcall/callback/trampoline_r/config.h.msvc : ffcall/callback/trampoline_r/config.h.in
+	cd ffcall ; $(MAKE) -f Makefile.devel callback/trampoline_r/config.h.msvc
+
+acorn/pathname.txt : src/pathname.d
+	cat src/pathname.d | sed -e '1,/Burwood/d' | sed -e '/Components/,$$d' > acorn/pathname.txt
+
+
+distrib : linux-distrib src-distrib
+
+## RELEASE TODO:
+# Before doing a "make src-distrib":
+# * update src/version.h, src/NEWS, src/HISTORY
+# * update clisp.lsm, clisp.spec
+# * "make -f Makefile.devel",
+# * "make -f Makefile.devel check-configures",
+# * check that src/genclisph.d is up to date.
+# web pages to be updated:
+# www/index.php, www/impnotes.html, www/clisp.html, www/impnotes/
+
+# CLISP release announcements go to:
+# clisp-announce@lists.sourceforge.net
+# info-gnu@gnu.org
+# news:comp.lang.lisp
+# news:comp.os.linux.announce (linux-announce@news.ornl.gov)
+# http://freshmeat.net/projects/clisp/
+# https://sourceforge.net/news/submit.php?group_id=1355
+
+# careful here: this src/VERSION is changed by this file!
+VER=$(shell cat src/VERSION)
+SRC_DIST=/tmp/clisp-$(VER)$(PACKEXT)
+SRC_DIST1=/tmp/clisp-$(VER).tar.gz
+SSHUP=gnudist:~/ftp-clisp/ cons:~/ftp-clisp/
+FTPUP=upload.sf.net:/incoming sunsite.unc.edu:/incoming/linux
+
+$(SRC_DIST1) : $(SRC_DIST)
+	bzcat -v $(SRC_DIST) | gzip -9 -v > $(SRC_DIST1)
+
+upload : $(SRC_DIST1) force
+	for h in $(SSHUP) ; do \
+	  scp $(SRC_DIST) $(SRC_DIST1) $${h}/latest/; scp src/NEWS $${h}; \
+	done
+	for h in $(FTPUP) ; do \
+	  lftp $${h} -e "put clisp.lsm $(SRC_DIST) $(SRC_DIST1); quit"; \
+	done
+
+src-distrib : src/FILES src/version.h potfiles force
+	$(MAKE) -f Makefile.devel src--distrib TOPDIR=clisp-$(VER)
+
+src--distrib : force
+	ln -s . $(TOPDIR)
+	$(PACK) $(PACKOPT) $(SRC_DIST) $(EXCLUDE) $(SOURCES)
+	rm -f $(TOPDIR)
+	cd src/po && $(PACK) $(PACKOPT) /tmp/$(TOPDIR)-potfiles$(PACKEXT) *.po*
+
+linux-distrib : force
+	$(MAKE) linux--distrib
+
+linux--distrib : force
+	cd make.gcc && $(MAKE) PACK="$(PACK)" PACKOPT="$(PACKOPT)" PACKEXT="$(PACKEXT)" distrib
+
+os2-distrib : force
+	$(MAKE) os2--distrib PACK="zip" PACKOPT="-r" PACKEXT=".zip"
+
+os2--distrib : force
+	mkdir $(TEMPDIR)
+	cp -p $(DOSDIR)/ANNOUNCE $(DOSDIR)/COPYRIGHT $(DOSDIR)/GNU-GPL $(DOSDIR)/SUMMARY $(DOSDIR)/NEWS $(TEMPDIR)
+	cp -p $(DOSDIR)/lisp.exe $(TEMPDIR)
+	cp -p $(DOSDIR)/lispinit.mem $(TEMPDIR)
+	cp -p $(DOSDIR)/*.lisp $(TEMPDIR)
+#	cp -p $(DOSDIR)/*.fas $(TEMPDIR)
+	mkdir $(TEMPDIR)/locale
+	for lang in en de fr es nl ru; do mkdir $(TEMPDIR)/locale/$$lang; mkdir $(TEMPDIR)/locale/$$lang/LC_MESSAGES; cp -p $(DOSDIR)/locale/$$lang/LC_MESSAGES/clisp.mo $(TEMPDIR)/locale/$$lang/LC_MESSAGES/clisp.mo; done
+	cp -p $(DOSDIR)/README $(DOSDIR)/README.de $(DOSDIR)/README.en $(DOSDIR)/README.es $(DOSDIR)/clisp.1 $(DOSDIR)/clisp.html $(DOSDIR)/impnotes.html $(DOSDIR)/clisp.gif $(DOSDIR)/clreadline.3 $(DOSDIR)/clreadline.html $(TEMPDIR)
+	from-ibmpc $(TEMPDIR)/clisp.1 os2/clisp.1
+	from-ibmpc $(TEMPDIR)/clisp.html os2/clisp.html
+	from-ibmpc $(TEMPDIR)/impnotes.html os2/impnotes.html
+	from-ibmpc $(TEMPDIR)/clreadline.3 os2/clreadline.3
+	from-ibmpc $(TEMPDIR)/clreadline.html os2/clreadline.html
+	cd os2 ; $(GROFF) -Tascii clisp.1 > clisp.man
+	cd os2 ; $(GROFF) -Tdvi clisp.1 > clisp.dvi
+	cd os2 ; $(GROFF) -Tascii clreadline.3 > clreadline.man
+	cd os2 ; $(GROFF) -Tdvi clreadline.3 > clreadline.dvi
+	to-ibmpc os2/clisp.man $(TEMPDIR)/clisp.man
+	cp -p os2/clisp.dvi $(TEMPDIR)/clisp.dvi
+	to-ibmpc os2/clreadline.man $(TEMPDIR)/clreadline.man
+	cp -p os2/clreadline.dvi $(TEMPDIR)/clreadline.dvi
+	cd doc ; for f in CLOS-guide.txt LISP-tutorial.txt editors.txt; do to-ibmpc $$f $(TEMPDIR)/$$f; done
+	cd src/readline/doc ; $(MAKE) rluserman.dvi
+	cp -p src/readline/doc/rluserman.dvi $(TEMPDIR)/readline.dvi
+	cp -p $(EMXDIR)/bin/emx.exe $(TEMPDIR)/emx.exe
+	to-ibmpc os2/emx-faq.doc $(TEMPDIR)/emx-faq.doc
+	cp -p $(EMXDIR)/doc/emxrt.doc $(TEMPDIR)/emx-user.doc
+	cp -p $(EMXDIR)/dll/emx.dll $(TEMPDIR)
+	cp -p $(EMXDIR)/dll/emxlibc.dll $(TEMPDIR)
+	cp -p $(EMXDIR)/etc/termcap.dat $(TEMPDIR)
+	cd $(TEMPDIR) ; $(PACK) $(PACKOPT) /tmp/clisp$(PACKEXT) *
+	rm -rf $(TEMPDIR)
+
+force :
