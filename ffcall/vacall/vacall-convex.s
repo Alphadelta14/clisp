@@ -5,10 +5,10 @@ ___gnu_compiled_c:
 .text
 .text
 .align 2
-.globl ___vacall
+.globl _vacall
 	ds.b "g263"
 	ds.b "+01\0"
-___vacall:
+_vacall:
 	sub.w #32,sp
 	ld.w #0,s1
 	st.w s1,-28(fp)

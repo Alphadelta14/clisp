@@ -3,15 +3,15 @@
 	.set	nobopt
 	.text
 	.align	2
-	.globl	__vacall
-	DECLARE_FUNCTION(__vacall)
+	.globl	vacall
+	DECLARE_FUNCTION(vacall)
 
 	.extern	vacall_function, 4
 
 	.text
 	.text
-	.ent	__vacall
-__vacall:
+	.ent	vacall
+vacall:
 	.frame	$fp,88,$31		
 	.mask	0xc0000000,-4
 	.fmask	0x00000000,0
@@ -236,4 +236,4 @@ $L4:
 	.set	macro
 	.set	reorder
 
-	.end	__vacall
+	.end	vacall
